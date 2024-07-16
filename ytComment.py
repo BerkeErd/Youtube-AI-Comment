@@ -76,33 +76,6 @@ def post_reply(comment_id, reply):
     response = request.execute()
     return response
 
-def get_random_video_id():
-    # Popüler arama terimleri listesi
-    search_terms = ["Lol videosu", "Kodlama", "Yaptım", "Oynuyoruz", "Türkçe Anime", "İndirimli oyunlar", "Nasıl Yapılır", "Şaka", "cs go videoları", "Saçma", "oynuyorum", "çekiliş var"]
-
-    # Rastgele bir arama terimi seç
-    search_query = random.choice(search_terms)
-
-    try:
-        # YouTube'da arama yap
-        search_response = youtube.search().list(
-            q=search_query,
-            type='video',
-            part='id,snippet',
-            maxResults=50
-        ).execute()
-
-        # Sonuçlardan rastgele bir video seç
-        videos = search_response.get('items', [])
-        if not videos:
-            return None
-
-        random_video = random.choice(videos)
-        return random_video['id']['videoId']
-
-    except Exception as e:
-        print(f"Hata oluştu: {e}")
-        return None
 
 # Prompt seçeneklerini güncelleyelim
 prompt_options = [
@@ -122,8 +95,10 @@ prompt_options = [
     {"title": "League of Legends oyuncusu", "prompt": "'{video_title}' başlıklı videoya yapılan bu yoruma, bronz bir LoL oyuncusunun takım arkadaşına yazışı gibi cevap ver. Bütün mesajı küçük harfler ile yaz ve noktalama işaretleri kullanma (maksimum 200 karakter): {comment}"},
     {"title": "Fıkracı", "prompt": "'{video_title}' başlıklı videoya yapılan bu yoruma, yorumdan yola çıkarak bir fıkra uydur ve o fıkrayı yaz. Fıkra oldukça yaratıcı ve saçma olsun. Hatta sonunu öyle saçma bağla ki absürdlüğü bizi güldürsün. (maksimum 200 karakter): {comment}"},
     {"title": "Gereksiz Detaycı", "prompt": "'{video_title}' başlıklı bu videoya yapılmış olan bu yoruma aşırı gereksiz detaylar ekleyerek cevap yaz. Mesela 'iPhone 15 Pro Max 512 Gb siyah akıllı telefonumla videoyu izlerken bu yorumu gördüm' gibi ama direkt aynısını yazma, bunun gibi başka şeyler üret (maksimum 200 karakter): {comment}"},
-    {"title": "Kendini Beğenmiş", "prompt": "'{video_title}' başlıklı bu videoya yapılmış olan bu yoruma cevap yazarken sürekli kendini öv ve gülücük gibi ifadeler kullan, bulduğun her fırsatta kendini öv. (maksimum 200 karakter): {comment}"}
-]
+    {"title": "Kendini Beğenmiş", "prompt": "'{video_title}' başlıklı bu videoya yapılmış olan bu yoruma cevap yazarken sürekli kendini öv ve gülücük gibi ifadeler kullan, bulduğun her fırsatta kendini öv. (maksimum 200 karakter): {comment}"},
+    {"title": "AI Müzik Kanalı Reklamı", "prompt": "Video başlığı şu olan '{video_title}'. Bu yoruma AI Müzik kanalının reklamını yapar gibi cevap yaz, ama gerçekten bir insan gibi görünsün. Yazarken kesme işaretlerini, büyük harfleri ve küçük harfleri hatalı kullan çok az emoji kullan ve yazım kurallarını pek umursama. Özellikle 'Yapay Zeka İş Başında' diye bir şarkı olduğunu söyle, bu şarkıda yapay zekanın işleri aldığını ve bunun ilginç ve komik olduğunu belirt ama bunları bir bronz küme lol oyuncusuymuşsun gibi yaz lol chatte yazan lol oyuncuları gibi yaz(maksimum 200 karakter): {comment}"}
+    ]
+
 
 
 
@@ -136,7 +111,7 @@ def get_recent_videos():
         three_months_ago = (datetime.utcnow() - timedelta(days=90)).isoformat() + 'Z'
 
         # Popüler arama terimleri
-        search_terms = ["Lol videosu", "Kodlama", "Yaptım", "Oynuyoruz", "Türkçe Anime", "İndirimli oyunlar", "Nasıl Yapılır", "Şaka", "cs go videoları", "Saçma", "oynuyorum", "çekiliş var"]
+        search_terms = ["Yapay zeka müziği", "Müzik", "Yapay zekalı müzik", "Suno ile müzik yapmak", "Udio ile müzik", "Yapay zeka müzik yapıyor", "AI Müzik türkçe", "Türkçe yapay zeka müziği", "Yapay zekaya yaptırdım", "Yapay zeka yapıyor", "Lol TR", "çekiliş"]
 
         # Rastgele bir arama terimi seç
         search_query = random.choice(search_terms)
@@ -151,11 +126,21 @@ def get_recent_videos():
             order='date'
         ).execute()
 
-        videos = search_response.get('items', [])
+        videos = []
+        for item in search_response.get('items', []):
+            video_id = item['id']['videoId']
+            # Videonun yorum durumunu kontrol et
+            video_response = youtube.videos().list(
+                part='statistics',
+                id=video_id
+            ).execute()
+            if video_response['items'][0]['statistics'].get('commentCount') is not None:
+                videos.append(video_id)
+
         if not videos:
             return None
 
-        return random.choice(videos)['id']['videoId']
+        return random.choice(videos)
 
     except Exception as e:
         print(f"Video arama hatası: {e}")
@@ -182,7 +167,10 @@ def get_recent_comments(video_id):
         return comments
 
     except HttpError as e:
-        print(f"Yorum alma hatası: {e}")
+        if e.resp.status == 403 and 'commentsDisabled' in str(e):
+            print(f"Bu video için yorumlar devre dışı bırakılmış: {video_id}")
+        else:
+            print(f"Yorum alma hatası: {e}")
         return []
 
 def get_video_details(video_id):
@@ -225,96 +213,102 @@ def main():
         video_id = get_recent_videos()
         if video_id:
             video_title = get_video_details(video_id)
-            comments = get_recent_comments(video_id)
-            comment_count = len(comments)
+            try:
+                comments = get_recent_comments(video_id)
+                comment_count = len(comments)
 
-            print(f"\nSeçilen video ID: {video_id}")
-            print(f"Video Başlığı: {video_title}")
-            print(f"Yorum Sayısı: {comment_count}")
+                print(f"\nSeçilen video ID: {video_id}")
+                print(f"Video Başlığı: {video_title}")
+                print(f"Yorum Sayısı: {comment_count}")
 
-            action_choice = input("Ne yapmak istersiniz? (1: Yorum yanıtla, 2: Yeni yorum bırak, 3: Bu videoyu geç): ")
+                action_choice = input("Ne yapmak istersiniz? (1: Yorum yanıtla, 2: Yeni yorum bırak, 3: Bu videoyu geç): ")
 
-            if action_choice == '1':
-                if comments:
-                    while comments:
-                        random_comment = random.choice(comments)
-                        print(f"\nSeçilen yorum: {random_comment['text']}")
+                if action_choice == '1':
+                    if comments:
+                        while comments:
+                            random_comment = random.choice(comments)
+                            print(f"\nSeçilen yorum: {random_comment['text']}")
 
-                        print("\nPrompt seçenekleri:")
-                        for i, prompt in enumerate(prompt_options, 1):
-                            print(f"{i}. {prompt['title']}")
-                        print("0. Bu yorumu geç")
+                            print("\nPrompt seçenekleri:")
+                            for i, prompt in enumerate(prompt_options, 1):
+                                print(f"{i}. {prompt['title']}")
+                            print("0. Bu yorumu geç")
 
-                        prompt_choice = input("Hangi prompt'u kullanmak istersiniz? (0-15): ")
+                            prompt_choice = input("Hangi prompt'u kullanmak istersiniz? (0-15): ")
 
-                        if prompt_choice == '0':
-                            comments.remove(random_comment)
-                            print("Yorum geçildi. Yeni bir yorum seçiliyor...")
-                            continue
+                            if prompt_choice == '0':
+                                comments.remove(random_comment)
+                                print("Yorum geçildi. Yeni bir yorum seçiliyor...")
+                                continue
 
-                        try:
-                            prompt_choice = int(prompt_choice)
-                            if 1 <= prompt_choice <= len(prompt_options):
-                                chosen_prompt = prompt_options[prompt_choice - 1]['prompt'].format(
-                                    comment=random_comment['text'],
-                                    video_title=video_title
-                                )
-                                response_comment = generate_comment(chosen_prompt)
+                            try:
+                                prompt_choice = int(prompt_choice)
+                                if 1 <= prompt_choice <= len(prompt_options):
+                                    chosen_prompt = prompt_options[prompt_choice - 1]['prompt'].format(
+                                        comment=random_comment['text'],
+                                        video_title=video_title
+                                    )
+                                    response_comment = generate_comment(chosen_prompt)
 
-                                print(f"\nOluşturulan yanıt: {response_comment}")
+                                    print(f"\nOluşturulan yanıt: {response_comment}")
 
-                                confirmation = input("Bu yanıtı göndermek istiyor musunuz? (E/H): ")
-                                if confirmation.lower() == 'e':
-                                    post_reply(random_comment['id'], response_comment)
-                                    print("Yanıt başarıyla gönderildi.")
+                                    confirmation = input("Bu yanıtı göndermek istiyor musunuz? (E/H): ")
+                                    if confirmation.lower() == 'e':
+                                        post_reply(random_comment['id'], response_comment)
+                                        print("Yanıt başarıyla gönderildi.")
+                                    else:
+                                        print("Yanıt gönderilmedi.")
+                                    break
                                 else:
-                                    print("Yanıt gönderilmedi.")
-                                break
-                            else:
-                                print("Geçersiz seçim. Lütfen 0 ile 15 arasında bir sayı girin.")
-                        except ValueError:
-                            print("Geçersiz giriş. Lütfen bir sayı girin.")
+                                    print("Geçersiz seçim. Lütfen 0 ile 15 arasında bir sayı girin.")
+                            except ValueError:
+                                print("Geçersiz giriş. Lütfen bir sayı girin.")
 
-                    if not comments:
-                        print("Bu video için tüm yorumlar geçildi veya uygun yorum bulunamadı.")
-                else:
-                    print("Seçilen video için uygun yorum bulunamadı.")
-
-            elif action_choice == '2':
-                print("\nYeni yorum için prompt seçenekleri:")
-                for i, prompt in enumerate(prompt_options, 1):
-                    print(f"{i}. {prompt['title']}")
-
-                prompt_choice = input("Hangi prompt'u kullanmak istersiniz? (1-15): ")
-
-                try:
-                    prompt_choice = int(prompt_choice)
-                    if 1 <= prompt_choice <= len(prompt_options):
-                        chosen_prompt = prompt_options[prompt_choice - 1]['prompt'].format(
-                            comment="",
-                            video_title=video_title
-                        )
-                        new_comment = generate_comment(chosen_prompt)
-
-                        print(f"\nOluşturulan yorum: {new_comment}")
-
-                        confirmation = input("Bu yorumu göndermek istiyor musunuz? (E/H): ")
-                        if confirmation.lower() == 'e':
-                            post_comment(video_id, new_comment)
-                            print("Yorum başarıyla gönderildi.")
-                        else:
-                            print("Yorum gönderilmedi.")
+                        if not comments:
+                            print("Bu video için tüm yorumlar geçildi veya uygun yorum bulunamadı.")
                     else:
-                        print("Geçersiz seçim. Lütfen 1 ile 15 arasında bir sayı girin.")
-                except ValueError:
-                    print("Geçersiz giriş. Lütfen bir sayı girin.")
+                        print("Seçilen video için uygun yorum bulunamadı.")
 
-            elif action_choice == '3':
-                print("Bu video geçildi. Yeni bir video seçiliyor...")
+                elif action_choice == '2':
+                    print("\nYeni yorum için prompt seçenekleri:")
+                    for i, prompt in enumerate(prompt_options, 1):
+                        print(f"{i}. {prompt['title']}")
+
+                    prompt_choice = input("Hangi prompt'u kullanmak istersiniz? (1-15): ")
+
+                    try:
+                        prompt_choice = int(prompt_choice)
+                        if 1 <= prompt_choice <= len(prompt_options):
+                            chosen_prompt = prompt_options[prompt_choice - 1]['prompt'].format(
+                                comment="",
+                                video_title=video_title
+                            )
+                            new_comment = generate_comment(chosen_prompt)
+
+                            print(f"\nOluşturulan yorum: {new_comment}")
+
+                            confirmation = input("Bu yorumu göndermek istiyor musunuz? (E/H): ")
+                            if confirmation.lower() == 'e':
+                                post_comment(video_id, new_comment)
+                                print("Yorum başarıyla gönderildi.")
+                            else:
+                                print("Yorum gönderilmedi.")
+                        else:
+                            print("Geçersiz seçim. Lütfen 1 ile 15 arasında bir sayı girin.")
+                    except ValueError:
+                        print("Geçersiz giriş. Lütfen bir sayı girin.")
+
+                elif action_choice == '3':
+                    print("Bu video geçildi. Yeni bir video seçiliyor...")
+                    continue
+
+                else:
+                    print("Geçersiz seçim. Lütfen 1, 2 veya 3 girin.")
+
+            except Exception as e:
+                print(f"Bu video için yorumlar alınamadı: {e}")
+                print("Yeni bir video seçiliyor...")
                 continue
-
-            else:
-                print("Geçersiz seçim. Lütfen 1, 2 veya 3 girin.")
 
         else:
             print("Uygun video bulunamadı.")
