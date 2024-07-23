@@ -111,7 +111,7 @@ def get_recent_videos():
         three_months_ago = (datetime.utcnow() - timedelta(days=90)).isoformat() + 'Z'
 
         # Popüler arama terimleri
-        search_terms = ["LOL videosu", "Lol yeni mod", "Lolde yeni hero", "Steamde yeni oyun", "Steam oyunu", "Epic Games bedava", "AI Müzik türkçe", "Türkçe yapay zeka müziği", "Yapay zekaya yaptırdım", "Yapay zeka", "Lol TR", "çekiliş"]
+        search_terms = ["Komik Video", "Türkiye", "Kedi Videosu", "Steam oyunu", "Yapay zeka", "Lol TR", "Yeni Video"]
 
         # Rastgele bir arama terimi seç
         search_query = random.choice(search_terms)
