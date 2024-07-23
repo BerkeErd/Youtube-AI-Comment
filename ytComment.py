@@ -38,7 +38,7 @@ credentials = flow.credentials
 youtube = build('youtube', 'v3', credentials=credentials)
 
 # Gemini API anahtarını ayarlayın
-GEMINI_API_KEY = 'AIzaSyB4B7qLCOmef7_Npw_jD7O9Hf9y26OzrsY'
+GEMINI_API_KEY = 'YOUR-API-KEY'
 genai.configure(api_key=GEMINI_API_KEY)
 
 
@@ -111,7 +111,7 @@ def get_recent_videos():
         three_months_ago = (datetime.utcnow() - timedelta(days=90)).isoformat() + 'Z'
 
         # Popüler arama terimleri
-        search_terms = ["Yapay zeka müziği", "Müzik", "Yapay zekalı müzik", "Suno ile müzik yapmak", "Udio ile müzik", "Yapay zeka müzik yapıyor", "AI Müzik türkçe", "Türkçe yapay zeka müziği", "Yapay zekaya yaptırdım", "Yapay zeka yapıyor", "Lol TR", "çekiliş"]
+        search_terms = ["LOL videosu", "Lol yeni mod", "Lolde yeni hero", "Steamde yeni oyun", "Steam oyunu", "Epic Games bedava", "AI Müzik türkçe", "Türkçe yapay zeka müziği", "Yapay zekaya yaptırdım", "Yapay zeka", "Lol TR", "çekiliş"]
 
         # Rastgele bir arama terimi seç
         search_query = random.choice(search_terms)
