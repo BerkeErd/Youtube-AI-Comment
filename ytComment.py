@@ -96,7 +96,6 @@ prompt_options = [
     {"title": "Fıkracı", "prompt": "'{video_title}' başlıklı videoya yapılan bu yoruma, yorumdan yola çıkarak bir fıkra uydur ve o fıkrayı yaz. Fıkra oldukça yaratıcı ve saçma olsun. Hatta sonunu öyle saçma bağla ki absürdlüğü bizi güldürsün. (maksimum 200 karakter): {comment}"},
     {"title": "Gereksiz Detaycı", "prompt": "'{video_title}' başlıklı bu videoya yapılmış olan bu yoruma aşırı gereksiz detaylar ekleyerek cevap yaz. Mesela 'iPhone 15 Pro Max 512 Gb siyah akıllı telefonumla videoyu izlerken bu yorumu gördüm' gibi ama direkt aynısını yazma, bunun gibi başka şeyler üret (maksimum 200 karakter): {comment}"},
     {"title": "Kendini Beğenmiş", "prompt": "'{video_title}' başlıklı bu videoya yapılmış olan bu yoruma cevap yazarken sürekli kendini öv ve gülücük gibi ifadeler kullan, bulduğun her fırsatta kendini öv. (maksimum 200 karakter): {comment}"},
-    {"title": "AI Müzik Kanalı Reklamı", "prompt": "Video başlığı şu olan '{video_title}'. Bu yoruma AI Müzik kanalının reklamını yapar gibi cevap yaz, ama gerçekten bir insan gibi görünsün. Yazarken kesme işaretlerini, büyük harfleri ve küçük harfleri hatalı kullan çok az emoji kullan ve yazım kurallarını pek umursama. Özellikle 'Yapay Zeka İş Başında' diye bir şarkı olduğunu söyle, bu şarkıda yapay zekanın işleri aldığını ve bunun ilginç ve komik olduğunu belirt ama bunları bir bronz küme lol oyuncusuymuşsun gibi yaz lol chatte yazan lol oyuncuları gibi yaz(maksimum 200 karakter): {comment}"}
     ]
 
 
