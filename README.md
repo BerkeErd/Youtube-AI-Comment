@@ -75,7 +75,53 @@ Bu çeşitlilik, botun ürettiği yorumları daha ilginç ve eğlenceli hale get
 
 4. `client_secret.json` dosyasını Colab ortamına yükleyin.
 
-5. Notebook'u çalıştırın ve konsol çıktılarını takip edin.
+5. Notebook'u çalıştırın ve konsol çıktılarını takip edin.## Kurulum
+
+1. Bu repository'yi klonlayın:
+   ```
+   git clone https://github.com/kullaniciadi/youtube-yorum-botu.git
+   ```
+
+2. Proje dizinine gidin:
+   ```
+   cd youtube-yorum-botu
+   ```
+
+3. (Opsiyonel) Bir sanal ortam oluşturun ve etkinleştirin:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # Linux veya macOS
+   # veya
+   venv\Scripts\activate  # Windows
+   ```
+
+4. Gerekli kütüphaneleri yükleyin:
+   ```
+   pip install -r requirements.txt
+   ```
+
+5. Google Cloud Console'da bir proje oluşturun ve YouTube Data API'yi etkinleştirin.
+
+6. OAuth 2.0 istemci kimlik bilgilerini indirin ve `client_secret.json` olarak kaydedin.
+
+7. Gemini API anahtarınızı alın.
+
+8. `bot.py` dosyasında `GEMINI_API_KEY` değişkenine API anahtarınızı girin.
+
+## Google Colab Kullanımı
+
+1. Google Colab'de yeni bir notebook oluşturun.
+
+2. Bu repository'deki `bot.py` ve `ui.py` dosyalarının içeriğini Colab notebook'una kopyalayın.
+
+3. Gerekli kütüphaneleri yüklemek için notebook'un başına şu komutu ekleyin:
+   ```python
+   !pip install -r requirements.txt
+   ```
+
+4. `client_secret.json` dosyasını Colab ortamına yükleyin.
+
+5. Notebook'u çalıştırın ve oluşturulan kullanıcı arayüzünü kullanarak bot'u yönetin.
 
 6. İstendiğinde yetkilendirme URL'sini açın ve kodu girin.
 
